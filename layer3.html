@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="stylesheet" href="style.css" />
+  <title>Valentine Letter</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&display=swap"
+    rel="stylesheet"
+  />
+</head>
+
+<body>
+
+  <!-- Envelope Screen -->
+  <div id="envelope-container">
+    <img src="envelope.png" alt="Envelope" id="envelope" />
+    <p>♡ Letter for You ♡</p>
+  </div>
+
+  <!-- Letter Screen -->
+  <div id="letter-container">
+    <div class="letter-window">
+
+      <!-- First Stage -->
+      <div id="first-stage">
+        <h1 id="letter-title">Will you be my meow-entine?</h1>
+        <img src="cat_heart.gif" class="cat" id="letter-cat" />
+
+        <div class="buttons">
+          <img src="yes.png" class="btn yes-btn" alt="Yes" />
+          <div class="no-wrapper">
+            <img src="no.png" class="btn no-btn" alt="No" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Second Stage (Love Letter) -->
+      <div id="second-stage">
+        <p class="love-text">
+          My love,<br>
+	  You told me the meaning of purple heart. That changes into red now.
+	  <br>
+	  Only constant thing is that the heart is still ours. I love you. 
+          <br>
+          So I have one more question...
+        </p>
+
+        <h2 class="second-question">
+          Will you go on a romantic date with me?
+        </h2>
+
+        <div class="second-buttons">
+          <img src="yes.png" class="btn second-yes" alt="Yes Again" />
+        </div>
+      </div>
+
+      <!-- Final Stage -->
+      <div id="final-stage">
+        <h1>Yippeeee! 💖</h1>
+        <img src="cat_dance.gif" class="cat" />
+        <p class="final-text">
+          <strong>Valentine Date:</strong> Meow Restaurant at 7pm. Dress fancy!
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

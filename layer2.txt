@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Layer 2: Elephant Run</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #ffffff; /* White Background */
+            overflow: hidden;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        #score-board {
+            position: absolute;
+            top: 20px;
+            right: 40px;
+            font-size: 28px;
+            color: #000; /* Black Text */
+            font-weight: bold;
+        }
+
+        #heart-btn {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 100px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            animation: beat 1s infinite;
+            z-index: 100;
+        }
+
+        @keyframes beat {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.2); }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="score-board">Score: 0</div>
+    <canvas id="gameCanvas"></canvas>
+    <button id="heart-btn" onclick="goToNextLayer()">❤️</button>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreElement = document.getElementById('score-board');
+        const heartBtn = document.getElementById('heart-btn');
+
+        // --- 1. SETUP ---
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // --- 2. LOAD IMAGES ---
+        const imgEleRun1 = new Image(); imgEleRun1.src = 'elephant-a.svg';
+        const imgEleRun2 = new Image(); imgEleRun2.src = 'elephant-a2.svg';
+        const imgEleDead = new Image(); imgEleDead.src = 'elephant-b.svg';
+        
+        const imgCactus1 = new Image(); imgCactus1.src = 'cactus1.png';
+        const imgCactus2 = new Image(); imgCactus2.src = 'cactus2.png';
+
+        // --- 3. GAME VARIABLES ---
+        let gameRunning = true;
+        let score = 0;
+        let frameCount = 0;
+        let gameSpeed = 8;
+        let groundY = canvas.height / 2; 
+
+        let player = {
+            x: 50,
+            y: 0,
+            w: 100, 
+            h: 70, 
+            dy: 0,
+            jumpPower: -15,
+            gravity: 0.8,
+            grounded: false
+        };
+
+        let obstacles = [];
+        let clouds = [];
+
+        // --- 4. CONTROLS ---
+        function jump() {
+            if (player.grounded && gameRunning) {
+                player.dy = player.jumpPower;
+                player.grounded = false;
+            } else if (!gameRunning && score < 69) {
+                location.reload();
+            }
+        }
+        
+        document.addEventListener('keydown', (e) => { if (e.code === 'Space') jump(); });
+        document.addEventListener('touchstart', jump);
+        document.addEventListener('click', jump);
+
+        // --- 5. SPAWNERS ---
+        function spawnCloud() {
+            clouds.push({
+                x: canvas.width,
+                y: Math.random() * (groundY - 150), 
+                w: 60 + Math.random() * 40,
+                speed: gameSpeed * 0.2 
+            });
+        }
+
+        // --- 6. GAME LOOP ---
+        function update() {
+            if (!gameRunning) return;
+
+            requestAnimationFrame(update);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            frameCount++;
+            groundY = canvas.height / 2 + 50;
+
+            // --- A. DRAW BACKGROUND (B&W Style) ---
+            
+            // Sun (Black Outline Only)
+            ctx.beginPath();
+            ctx.arc(canvas.width - 100, 80, 40, 0, Math.PI * 2);
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = "black"; 
+            ctx.stroke();
+
+            // Clouds (Black Outline Only)
+            if (frameCount % 120 === 0) spawnCloud();
+            
+            for (let i = 0; i < clouds.length; i++) {
+                let c = clouds[i];
+                c.x -= c.speed;
+                
+                ctx.beginPath();
+                ctx.arc(c.x, c.y, 30, 0, Math.PI * 2);
+                ctx.arc(c.x + 25, c.y - 10, 35, 0, Math.PI * 2);
+                ctx.arc(c.x + 50, c.y, 30, 0, Math.PI * 2);
+                ctx.lineWidth = 1.5;
+                ctx.strokeStyle = "black"; // Black lines
+                ctx.stroke();
+            }
+
+            // Ground Line (Simple Black Line)
+            ctx.beginPath();
+            ctx.moveTo(0, groundY);
+            ctx.lineTo(canvas.width, groundY);
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = "black";
+            ctx.stroke();
+
+            // --- B. PHYSICS ---
+            player.dy += player.gravity;
+            player.y += player.dy;
+
+            if (player.y + player.h > groundY) {
+                player.y = groundY - player.h;
+                player.dy = 0;
+                player.grounded = true;
+            }
+
+            // --- C. OBSTACLES & COLLISION ---
+            let isHit = false;
+
+            if (frameCount % 90 === 0) {
+                obstacles.push({
+                    img: Math.random() > 0.5 ? imgCactus1 : imgCactus2,
+                    x: canvas.width,
+                    y: groundY - 60,
+                    w: 40,
+                    h: 60
+                });
+            }
+
+            for (let i = 0; i < obstacles.length; i++) {
+                let obs = obstacles[i];
+                obs.x -= gameSpeed;
+                ctx.drawImage(obs.img, obs.x, obs.y, obs.w, obs.h);
+
+                // Check Hit
+                if (
+                    player.x < obs.x + obs.w - 20 && 
+                    player.x + player.w - 20 > obs.x &&
+                    player.y < obs.y + obs.h &&
+                    player.h + player.y > obs.y
+                ) {
+                    isHit = true; // Mark as hit
+                }
+            }
+
+            // --- D. DRAW PLAYER (The Fix) ---
+            if (isHit) {
+                // If hit, STOP game and draw DEAD elephant
+                gameOver(); 
+            } else {
+                // If safe, draw RUNNING elephant
+                let currentImg = (Math.floor(frameCount / 10) % 2 === 0) ? imgEleRun1 : imgEleRun2;
+                ctx.drawImage(currentImg, player.x, player.y, player.w, player.h);
+                
+                // Update Score
+                if (frameCount % 10 === 0) {
+                    score++;
+                    scoreElement.innerText = "Score: " + score;
+                }
+                
+                // Win Check
+                if (score >= 69) triggerWin();
+            }
+        }
+
+        // --- 7. STATES ---
+        function gameOver() {
+            gameRunning = false;
+            
+            // Draw ONLY the dead elephant
+            ctx.drawImage(imgEleDead, player.x, player.y, player.w, player.h);
+            
+            ctx.fillStyle = "black";
+            ctx.font = "bold 40px Courier New";
+            ctx.textAlign = "center";
+            ctx.fillText("Game Over", canvas.width/2, canvas.height/2 - 50);
+            ctx.font = "20px Courier New";
+            ctx.fillText("Tap to Retry", canvas.width/2, canvas.height/2 - 10);
+        }
+
+        function triggerWin() {
+            gameRunning = false;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Simple Clean Win Screen
+            ctx.fillStyle = "black";
+            ctx.font = "bold 50px Courier New";
+            ctx.textAlign = "center";
+            ctx.fillText("Huh ! You Made 69!", canvas.width/2, canvas.height/2 - 80);
+            
+            heartBtn.style.display = "block";
+        }
+
+        function goToNextLayer() {
+            window.location.href = "layer3.html"; 
+        }
+
+        update();
+
+    </script>
+</body>
+</html>
